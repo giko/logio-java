@@ -1,29 +1,21 @@
 package org.kluge.logging;
 
 import io.reactivex.netty.channel.ObservableConnection;
-import org.kluge.logging.model.LogMessage;
-import org.kluge.logging.model.LogNode;
-import org.kluge.logging.model.LogServerEvent;
+import org.kluge.logging.model.*;
 import rx.Observable;
 import rx.functions.Action0;
 import rx.functions.Func1;
-import rx.subjects.PublishSubject;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Iterator;
 
 /**
  * Created by giko on 10/13/14.
  */
 public class LogServerConnectionHandler implements io.reactivex.netty.channel.ConnectionHandler<String, String> {
-    private PublishSubject<LogServerEvent> eventPublishSubject;
-    private Map<ObservableConnection<String, String>, LogNode> connections;
+    LogServerState state;
 
-
-    public LogServerConnectionHandler(PublishSubject<LogServerEvent> eventPublishSubject, Map<ObservableConnection<String, String>, LogNode> connections) {
-        this.eventPublishSubject = eventPublishSubject;
-        this.connections = connections;
+    public LogServerConnectionHandler(LogServerState state) {
+        this.state = state;
     }
 
     @Override
@@ -43,30 +35,37 @@ public class LogServerConnectionHandler implements io.reactivex.netty.channel.Co
 
         LogNode node = new LogNode();
         node.setAddress(connection.getChannel().remoteAddress().toString());
-        connections.put(connection, node);
-        
+        state.getConnections().put(connection, node);
+
         return connection.getInput().flatMap(new Func1<String, Observable<Void>>() {
             @Override
             public Observable<Void> call(String msg) {
                 System.out.println(msg);
                 String[] args = msg.replace("\r\n", "").split("\\|");
-                eventPublishSubject.onNext(new LogServerEvent(args[0], Arrays.copyOfRange(args, 1, args.length)));
 
                 if (args[0].equals("node")) {
-                    connections.get(connection).setName(args[1]);
+                    state.getConnections().get(connection).setName(args[1]);
                 } else if (args[0].equals("log")) {
                     int offset = 0;
                     if (args.length == 5) {
                         offset = 1;
-                        connections.get(connection).setName(args[2]);
+                        state.getConnections().get(connection).setName(args[2]);
                     }
-                    
+
                     LogMessage message = new LogMessage();
                     message.setStream(args[1]);
-                    message.setNode(connections.get(connection));
-                    message.setLevel(args[2+offset]);
-                    message.setMessage(args[3+offset]);
-                    eventPublishSubject.onNext(new LogServerEvent(args[0], message));
+                    message.setNode(state.getConnections().get(connection));
+                    message.setLevel(args[2 + offset]);
+                    message.setMessage(args[3 + offset]);
+
+                    LogStream stream = new LogStream(args[1]);
+                    if (!state.getStreams().contains(stream)) {
+                        stream.addNode(state.getConnections().get(connection));
+                        state.getStreams().add(stream);
+                        state.getNonCachingEventSubject().onNext(new LogServerEvent("stream", stream));
+                    }
+
+                    state.getCachingEventSubject().onNext(new LogServerEvent("log", message));
                 }
 
                 return Observable.empty();
@@ -75,7 +74,17 @@ public class LogServerConnectionHandler implements io.reactivex.netty.channel.Co
                 .finallyDo(new Action0() {
                     @Override
                     public void call() {
-                        connections.remove(connection);
+                        Iterator<LogStream> logStreamIterator = state.getStreams().iterator();
+                        while (logStreamIterator.hasNext()) {
+                            LogStream stream = logStreamIterator.next();
+                            stream.removeNode(state.getConnections().get(connection));
+                            if (stream.isEmpty()) {
+                                logStreamIterator.remove();
+                                state.getNonCachingEventSubject().onNext(new LogServerEvent("-stream", stream.getName()));
+                            }
+                        }
+                        state.getNonCachingEventSubject().onNext(new LogServerEvent("-node", state.getConnections().get(connection).getName()));
+                        state.getConnections().remove(connection);
                     }
                 });
     }

@@ -15,18 +15,30 @@
                         ioSocket: io.connect('http://localhost:9191/')
                     });
                 }).
-                controller('MyCtrl', function ($scope, socket) {
+                controller('MessagesCtrl', function ($scope, socket) {
+                    $scope.messages = [];
                     socket.forward('log', $scope);
                     $scope.$on('socket:log', function (ev, data) {
-                        $scope.theData = data;
+                        $scope.messages = $scope.messages.concat(data);
+                    });
+                }).
+                controller('StreamsCtrl', function ($scope, socket) {
+                    $scope.streams = [];
+                    socket.forward('stream', $scope);
+                    $scope.$on('socket:stream', function (ev, data) {
+                        $scope.streams = $scope.streams.concat(data);
                     });
                 });
 
     </script>
 </head>
 <body ng-app="myApp">
-<div ng-controller="MyCtrl">
-    {{theData}}
+<div ng-controller="StreamsCtrl">
+    <p ng-repeat="stream in streams">{{stream}}</p>
+</div>
+
+<div ng-controller="MessagesCtrl">
+    <p ng-repeat="message in messages">{{message.message}}</p>
 </div>
 
 </body>
