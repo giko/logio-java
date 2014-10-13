@@ -12,7 +12,7 @@
         ]).
                 factory('socket', function (socketFactory) {
                     return socketFactory({
-                        ioSocket: io.connect('http://localhost:81/')
+                        ioSocket: io.connect('http://localhost:9191/')
                     });
                 }).
                 controller('MyCtrl', function ($scope, socket) {
