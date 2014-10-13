@@ -28,7 +28,6 @@ public class Main {
 
             @Override
             public void onNext(LogServerEvent logServerEvent) {
-                System.out.println(logServerEvent.getType());
                 server.getBroadcastOperations().sendEvent(logServerEvent.getType(), logServerEvent.getObject());
             }
         });

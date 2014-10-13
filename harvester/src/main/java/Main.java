@@ -1,7 +1,5 @@
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
+import java.net.Socket;
 import java.nio.file.*;
 import java.util.*;
 
@@ -9,7 +7,13 @@ import java.util.*;
  * Created by giko on 10/13/14.
  */
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        Socket clientSocket = new Socket("localhost", 28878);
+        OutputStreamWriter outToServer = new OutputStreamWriter(clientSocket.getOutputStream());
+        
+        outToServer.write("node|".concat("fuck"));
+        outToServer.flush();
+        
         String nodeName = System.getenv().get("vNode");
         Scanner s = null;
         try {
@@ -26,9 +30,9 @@ public class Main {
         for (String glob : globs) {
             try {
                 String[] argsL = glob.split("\\ ");
-                Path directory = Paths.get(argsL[0]);
+                Path directory = Paths.get(argsL[1]);
                 WatchService watchService = directory.getFileSystem().newWatchService();
-                MyWatchQueueReader reader = new MyWatchQueueReader(watchService, FileSystems.getDefault().getPathMatcher("glob:".concat(argsL[1])), argsL[0]);
+                MyWatchQueueReader reader = new MyWatchQueueReader(watchService, FileSystems.getDefault().getPathMatcher("glob:".concat(argsL[2])), argsL[1], outToServer, argsL[0]);
                 Thread readerThread = new Thread(reader);
                 readerThread.start();
                 directory.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
@@ -47,11 +51,15 @@ public class Main {
         private PathMatcher matcher;
         private String path;
         private Map<String, Long> fileSizes = new HashMap<>();
+        private OutputStreamWriter outputStream;
+        private String stream;
 
-        public MyWatchQueueReader(WatchService myWatcher, PathMatcher matcher, String path) {
+        public MyWatchQueueReader(WatchService myWatcher, PathMatcher matcher, String path, OutputStreamWriter dataOutputStream, String stream) {
             this.myWatcher = myWatcher;
             this.matcher = matcher;
             this.path = path;
+            this.outputStream = dataOutputStream;
+            this.stream = stream;
         }
 
         /**
@@ -72,10 +80,15 @@ public class Main {
                             File file = Paths.get(path+"/"+(String)event.context().toString()).toFile();
                             RandomAccessFile randomAccessFile = new RandomAccessFile(file,"r");
                             long offset = fileSizes.get(event.context().toString()) == null ? 0 : fileSizes.get(event.context().toString());
-                            byte[] arra = new byte[(int) (randomAccessFile.length()-offset)];
-                            randomAccessFile.readFully(arra,(int)  offset, (int) (randomAccessFile.length() - offset));
+                            long len = (randomAccessFile.length() - offset);
+                            byte[] arra = new byte[(int) len];
+                            randomAccessFile.seek(offset);
+                            randomAccessFile.readFully(arra);
                             fileSizes.put(event.context().toString(), randomAccessFile.length());
-                            System.out.println(new String(arra));
+                            randomAccessFile.close();
+                            outputStream.write("log|"+stream+"|info|".concat(new String(arra)));
+                            outputStream.flush();
+                            System.out.println("log|"+stream+"|info|".concat(new String(arra)));
                             System.out.printf("Received %s event for file: %s\n",
                                     event.kind(), event.context());
                         }

@@ -48,6 +48,7 @@ public class LogServerConnectionHandler implements io.reactivex.netty.channel.Co
         return connection.getInput().flatMap(new Func1<String, Observable<Void>>() {
             @Override
             public Observable<Void> call(String msg) {
+                System.out.println(msg);
                 String[] args = msg.replace("\r\n", "").split("\\|");
                 eventPublishSubject.onNext(new LogServerEvent(args[0], Arrays.copyOfRange(args, 1, args.length)));
 
