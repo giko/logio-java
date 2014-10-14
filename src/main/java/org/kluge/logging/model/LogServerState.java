@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * Created by giko on 10/13/2014.
@@ -40,6 +41,10 @@ public class LogServerState {
 
     public PublishSubject<LogServerEvent> getNonCachingEventSubject() {
         return nonCachingEventSubject;
+    }
+    
+    public void addStream(LogStream stream){
+        
     }
 
     public Map<ObservableConnection<String, String>, LogNode> getConnections() {
