@@ -7,8 +7,8 @@ import java.util.Set;
  * Created by giko on 10/13/2014.
  */
 public class LogStream {
-    private String name;
-    private Set<LogNode> logNodes = new HashSet<>();
+    private final String name;
+    private final Set<LogNode> logNodes = new HashSet<>();
 
     public LogStream(String name) {
         this.name = name;
@@ -45,9 +45,5 @@ public class LogStream {
 
     public String getName() {
         return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 }

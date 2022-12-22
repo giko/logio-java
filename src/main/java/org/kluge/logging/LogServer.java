@@ -16,8 +16,8 @@ import java.util.List;
  * Created by giko on 10/12/2014.
  */
 public class LogServer {
-    private RxServer<String, String> server;
-    private LogServerState state = new LogServerState();
+    private final RxServer<String, String> server;
+    private final LogServerState state = new LogServerState();
 
     public LogServer() {
         server = RxNetty.createTcpServer(28878, PipelineConfigurators.textOnlyConfigurator(), new LogServerConnectionHandler(state));
