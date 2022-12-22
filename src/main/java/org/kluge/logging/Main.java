@@ -1,9 +1,7 @@
 package org.kluge.logging;
 
 import com.corundumstudio.socketio.Configuration;
-import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
-import com.corundumstudio.socketio.listener.ConnectListener;
 import org.kluge.logging.model.LogServerEvent;
 import rx.Observer;
 
@@ -13,8 +11,8 @@ import rx.Observer;
 public class Main {
     public static void main(String[] args) {
         Configuration config = new Configuration();
-        config.setHostname("localhost");
-        config.setPort(9191);
+        config.setHostname("0.0.0.0");
+        config.setPort(9192);
 
         final SocketIOServer server = new SocketIOServer(config);
 
@@ -31,7 +29,7 @@ public class Main {
 
             @Override
             public void onNext(LogServerEvent logServerEvent) {
-                client.sendEvent(logServerEvent.getType(), logServerEvent.getObject());
+                client.sendEvent(logServerEvent.type(), logServerEvent.object());
             }
         }));
         logServer.start();

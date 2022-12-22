@@ -14,17 +14,17 @@ import java.util.stream.Stream;
  * Created by giko on 10/13/2014.
  */
 public class LogServerState {
-    private Observable<LogServerEvent> cachingEventObservable;
-    private PublishSubject<LogServerEvent> cachingEventSubject;
-    private PublishSubject<LogServerEvent> nonCachingEventSubject;
-    private Map<ObservableConnection<String, String>, LogNode> connections;
-    private Set<LogStream> streams = new HashSet<>();
+    private final Observable<LogServerEvent> cachingEventObservable;
+    private final PublishSubject<LogServerEvent> cachingEventSubject;
+    private final PublishSubject<LogServerEvent> nonCachingEventSubject;
+    private final Map<ObservableConnection<String, String>, LogNode> connections;
+    private final Set<LogStream> streams = new HashSet<>();
 
     public LogServerState() {
         connections = new HashMap<>();
         cachingEventSubject = PublishSubject.create();
         nonCachingEventSubject = PublishSubject.create();
-        cachingEventObservable = cachingEventSubject.cache(100);
+        cachingEventObservable = cachingEventSubject.cacheWithInitialCapacity(100);
     }
 
     public Observable<LogServerEvent> getObservable() {

@@ -63,13 +63,13 @@ public class Main {
         /**
          * the watchService that is passed in from above
          */
-        private WatchService myWatcher;
-        private PathMatcher matcher;
-        private String path;
-        private Map<String, Long> fileSizes = new HashMap<>();
-        private OutputStreamWriter outputStream;
-        private String stream;
-        private String nodeName;
+        private final WatchService myWatcher;
+        private final PathMatcher matcher;
+        private final String path;
+        private final Map<String, Long> fileSizes = new HashMap<>();
+        private final OutputStreamWriter outputStream;
+        private final String stream;
+        private final String nodeName;
 
         public MyWatchQueueReader(WatchService myWatcher, PathMatcher matcher, String path, OutputStreamWriter dataOutputStream, String stream, String nodeName) {
             this.myWatcher = myWatcher;
@@ -93,9 +93,9 @@ public class Main {
                 while (key != null) {
                     // we have a polled event, now we traverse it and 
                     // receive all the states from it
-                    for (WatchEvent event : key.pollEvents()) {
+                    for (var event : key.pollEvents()) {
                         if (matcher.matches(Paths.get(event.context().toString()))) {
-                            File file = Paths.get(path + "/" + (String) event.context().toString()).toFile();
+                            File file = Paths.get(path + "/" + event.context().toString()).toFile();
                             RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
                             long offset = fileSizes.get(event.context().toString()) == null ? 0 : fileSizes.get(event.context().toString());
                             long len = (randomAccessFile.length() - offset);
@@ -113,8 +113,6 @@ public class Main {
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
-            } catch (FileNotFoundException e) {
-                throw new RuntimeException("An error occurred!", e);
             } catch (IOException e) {
                 throw new RuntimeException("An error occurred!", e);
             }

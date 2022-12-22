@@ -3,7 +3,6 @@ package org.kluge.logging;
 import io.reactivex.netty.channel.ObservableConnection;
 import org.kluge.logging.model.*;
 import rx.Observable;
-import rx.functions.Action0;
 import rx.functions.Func1;
 
 import java.util.Iterator;
@@ -68,7 +67,7 @@ public class LogServerConnectionHandler implements io.reactivex.netty.channel.Co
 
                     return Observable.empty();
                 })
-                .finallyDo(() -> {
+                .doAfterTerminate(() -> {
                     Iterator<LogStream> logStreamIterator = state.getStreams().iterator();
                     while (logStreamIterator.hasNext()) {
                         LogStream stream = logStreamIterator.next();
