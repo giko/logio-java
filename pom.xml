@@ -17,17 +17,17 @@
         <dependency>
             <groupId>com.corundumstudio.socketio</groupId>
             <artifactId>netty-socketio</artifactId>
-            <version>1.7.3</version>
+            <version>1.7.22</version>
         </dependency>
         <dependency>
             <groupId>com.netflix.rxjava</groupId>
             <artifactId>rxjava-core</artifactId>
-            <version>0.20.5</version>
+            <version>0.20.7</version>
         </dependency>
         <dependency>
             <groupId>com.netflix.rxnetty</groupId>
             <artifactId>rx-netty</artifactId>
-            <version>0.3.14</version>
+            <version>0.3.18</version>
         </dependency>
     </dependencies>
 </project>
