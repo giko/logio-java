@@ -20,29 +20,27 @@ public class Main {
 
         final LogServer logServer = new LogServer();
 
-        server.addConnectListener(new ConnectListener() {
+        server.addConnectListener(client -> logServer.subscribe(new Observer<>() {
             @Override
-            public void onConnect(final SocketIOClient client) {
-                logServer.subscribe(new Observer<LogServerEvent>() {
-                    @Override
-                    public void onCompleted() {
-                    }
-
-                    @Override
-                    public void onError(Throwable throwable) {
-                    }
-
-                    @Override
-                    public void onNext(LogServerEvent logServerEvent) {
-                        client.sendEvent(logServerEvent.getType(), logServerEvent.getObject());
-                    }
-                });
+            public void onCompleted() {
             }
-        });
+
+            @Override
+            public void onError(Throwable throwable) {
+            }
+
+            @Override
+            public void onNext(LogServerEvent logServerEvent) {
+                client.sendEvent(logServerEvent.getType(), logServerEvent.getObject());
+            }
+        }));
         logServer.start();
         server.start();
 
-        while (true) {
+        try {
+            server.startAsync().sync();
+        } catch (InterruptedException e) {
+            throw new RuntimeException("An error occurred!", e);
         }
     }
 }
